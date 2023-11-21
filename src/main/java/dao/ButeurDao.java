@@ -3,6 +3,10 @@
  */
 package dao;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 import foot.JPAUtils;
@@ -10,7 +14,6 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityTransaction;
 import jakarta.persistence.TypedQuery;
 import model.Buteur;
-import model.Joueur;
 
 /**
  * 
@@ -90,19 +93,36 @@ public class ButeurDao implements IDAO<Buteur>{
 	        return query.getResultList();
 	    }
 
-	    // Trouver les buteurs d'une équipe dans une compétition donnée
-	    public List<Buteur> findByTeamAndCompetition(String equipeNom, String competition) {
-	        TypedQuery<Buteur> query = entityManager.createQuery("SELECT b FROM Buteur b WHERE b.equipe.nom = :equipeNom AND b.match.competition.nom = :competition", Buteur.class);
-	        query.setParameter("equipeNom", equipeNom);
-	        query.setParameter("competition", competition);
-	        return query.getResultList();
+	    public List<Buteur> findTopScorers(int n) {
+	        String query = "SELECT b FROM Buteur b ORDER BY b.minuteButMarque DESC";
+	        TypedQuery<Buteur> typedQuery = entityManager.createQuery(query, Buteur.class);
+	        typedQuery.setMaxResults(n);
+	        return typedQuery.getResultList();
 	    }
 
-	    // Trouver les buteurs d'un match
-	    public List<Buteur> findByMatch(Long matchId) {
-	        TypedQuery<Buteur> query = entityManager.createQuery("SELECT b FROM Buteur b WHERE b.match.id = :matchId", Buteur.class);
-	        query.setParameter("matchId", matchId);
-	        return query.getResultList();
+	    public List<Buteur> findTopScorersByCompetition(String competitionName, int n) {
+	        String query = "SELECT b FROM Buteur b " +
+	                       "JOIN b.match m JOIN m.competition c " +
+	                       "WHERE c.nom = :competitionName " +
+	                       "ORDER BY b.minuteButMarque DESC";
+	        
+	        TypedQuery<Buteur> typedQuery = entityManager.createQuery(query, Buteur.class);
+	        typedQuery.setParameter("competitionName", competitionName);
+	        typedQuery.setMaxResults(n);
+
+	        return typedQuery.getResultList();
 	    }
 
+	    public List<Buteur> findTopScorersByTeam(String teamName, int n) {
+	        String query = "SELECT b FROM Buteur b " +
+	                       "JOIN b.match m " +
+	                       "WHERE m.equipeLocal.nom = :teamName OR m.equipeVisiteur.nom = :teamName " +
+	                       "ORDER BY b.minuteButMarque DESC";
+
+	        TypedQuery<Buteur> typedQuery = entityManager.createQuery(query, Buteur.class);
+	        typedQuery.setParameter("teamName", teamName);
+	        typedQuery.setMaxResults(n);
+
+	        return typedQuery.getResultList();
+	    }
 }

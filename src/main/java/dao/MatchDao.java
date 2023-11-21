@@ -145,5 +145,19 @@ public class MatchDao implements IDAO<Match> {
 		// TODO Auto-generated method stub
 
 	}
+	
+	public List<Match> findMatchResultsBetweenTeams(String equipeLocalNom, String equipeVisiteurNom) {
+	    String query = "SELECT m FROM Match m " +
+	                   "WHERE (m.equipeLocal.nom = :equipeLocalNom AND m.equipeVisiteur.nom = :equipeVisiteurNom) " +
+	                   "OR (m.equipeLocal.nom = :equipeVisiteurNom AND m.equipeVisiteur.nom = :equipeLocalNom) " +
+	                   "ORDER BY m.dateMatch";
+
+	    TypedQuery<Match> typedQuery = entityManager.createQuery(query, Match.class);
+	    typedQuery.setParameter("equipeLocalNom", equipeLocalNom);
+	    typedQuery.setParameter("equipeVisiteurNom", equipeVisiteurNom);
+
+	    return typedQuery.getResultList();
+	}
+
 
 }

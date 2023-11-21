@@ -4,6 +4,7 @@
 package model;
 
 import java.util.List;
+import java.util.Objects;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -61,6 +62,25 @@ public class Equipe {
 	public Equipe() {
 		super();
 		// TODO Auto-generated constructor stub
+	}
+
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(nom);
+	}
+
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Equipe other = (Equipe) obj;
+		return Objects.equals(nom, other.nom);
 	}
 
 

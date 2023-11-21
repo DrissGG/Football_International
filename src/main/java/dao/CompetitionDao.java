@@ -9,6 +9,7 @@ import foot.JPAUtils;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityTransaction;
 import jakarta.persistence.TypedQuery;
+import model.Buteur;
 import model.Competition;
 
 /**
@@ -80,10 +81,5 @@ public class CompetitionDao implements IDAO<Competition>{
     }
 
 
-    // Trouver les compétitions remportées par une équipe
-    public List<Competition> findCompetitionsWonByTeam(String nomEquipe) {
-        TypedQuery<Competition> query = entityManager.createQuery("SELECT c FROM Competition c WHERE c.equipeGagnante.nom = :nomEquipe", Competition.class);
-        query.setParameter("nomEquipe", nomEquipe);
-        return query.getResultList();
-    }
+   
 }

@@ -3,7 +3,7 @@
  */
 package model;
 
-import java.sql.Date;
+import java.util.Date;
 import java.time.LocalDate;
 
 import jakarta.persistence.Entity;
@@ -105,8 +105,8 @@ public class Match {
 	/** Setters
 	 * @param dateMatch the dateMatch to set
 	 */
-	public void setDateMatch(LocalDate localDate) {
-		this.dateMatch = Date.valueOf(localDate);
+	public void setDateMatch(Date localDate) {
+		this.dateMatch = (localDate);
 	}
 
 	/** Getters

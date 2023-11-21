@@ -5,13 +5,13 @@ package dao;
 
 import java.util.List;
 
-import jakarta.persistence.Query;
-
 import foot.JPAUtils;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityTransaction;
+import jakarta.persistence.Query;
 import jakarta.persistence.TypedQuery;
 import model.Equipe;
+import model.Match;
 
 /**
  * 
@@ -93,5 +93,42 @@ public class EquipeDao implements IDAO<Equipe>{
         return query.getResultList();
 	}
     
+	
+	 public List<Equipe> findTopWinningTeams(int n) {
+	        String query = "SELECT e FROM Equipe e " +
+	                       "ORDER BY calculateWinPercentage(e) DESC";
+
+	        TypedQuery<Equipe> typedQuery = entityManager.createQuery(query, Equipe.class);
+	        typedQuery.setMaxResults(n);
+
+	        return typedQuery.getResultList();
+	    }
+
+	 private double calculateWinPercentage(Equipe equipe) {
+		    int totalMatches = equipe.getMatchesLocaux().size() + equipe.getMatchesVisiteurs().size();
+		    if (totalMatches == 0) {
+		        return 0.0;
+		    }
+
+		    int totalWins = 0;
+		    for (Match matchLocal : equipe.getMatchesLocaux()) {
+		        if (isTeamWinner(equipe, matchLocal.getScoreFinalLocal(), matchLocal.getScoreFinalVisiteur())) {
+		            totalWins++;
+		        }
+		    }
+
+		    for (Match matchVisiteur : equipe.getMatchesVisiteurs()) {
+		        if (isTeamWinner(equipe, matchVisiteur.getScoreFinalVisiteur(), matchVisiteur.getScoreFinalLocal())) {
+		            totalWins++;
+		        }
+		    }
+
+		    return ((double) totalWins / totalMatches) * 100.0;
+		}
+
+		private boolean isTeamWinner(Equipe equipe, int teamScore, int opponentScore) {
+		    return (teamScore > opponentScore) || ((teamScore == opponentScore) && (Math.random() > 0.5));
+		}
+
 	
 }

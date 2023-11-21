@@ -51,8 +51,13 @@ public class LectureFichier {
 				teamVisiteur.setNom(record[2]);
 
 				// Ajouter les deux équipes à la liste
-				teams.add(teamLocal);
-				teams.add(teamVisiteur);
+				if(!teams.contains(teamLocal)) {
+					teams.add(teamLocal);
+				}
+				if(!teams.contains(teamVisiteur)) {
+					teams.add(teamVisiteur);
+				}
+				
 			}
 
 		} catch (IOException | CsvValidationException e) {
@@ -75,8 +80,11 @@ public class LectureFichier {
 				Joueur player = new Joueur();
 				player.setNom(record[4]); // Assurez-vous que l'indice correspond à votre fichier CSV
 				// Ajoutez d'autres champs en fonction des colonnes de votre fichier CSV
-
-				players.add(player);
+				
+				if(!players.contains(players)) {
+					players.add(player);
+				}
+				
 			}
 
 		} catch (IOException | CsvValidationException e) {
@@ -90,7 +98,7 @@ public class LectureFichier {
 		return str.matches("-?\\d+(\\.\\d+)?"); // Correspond à un nombre entier ou décimal
 	}
 
-	public static List<Buteur> readButeursFromCsv(String filePath) {
+	public static List<Buteur> readButeursFromCsv(String filePath, int limit) {
 		List<Buteur> buteurs = new ArrayList<>();
 		
 		try {
@@ -98,9 +106,9 @@ public class LectureFichier {
 			CSVReader csvReader = new CSVReader(reader);
 
 			csvReader.readNext(); // Ignorer l'en-tête
-
+			int count=0;
 			String[] record;
-			while ((record = csvReader.readNext()) != null) {
+			while ((record = csvReader.readNext()) != null && count < limit) {
 				// Créer un nouveau buteur avec les données du fichier CSV
 				Buteur buteur = new Buteur();
 
@@ -129,7 +137,7 @@ public class LectureFichier {
 	                // Prendre le premier match trouvé (vous pouvez ajuster la logique en fonction de vos besoins)
 	                Match match = matches.get(0);
 	                buteur.setMatch(match);
-	               // buteurs.add(buteur);
+	                buteurs.add(buteur);
 	            } else {
 	                System.out.println("Aucun match correspondant trouvé dans la base de données.");
 	            }
@@ -149,6 +157,7 @@ public class LectureFichier {
 					buteur.setJoueur(joueur);
 
 					buteurs.add(buteur);
+					count++;
 				} else {
 					System.out.println("L'équipe, le joueur ou le match n'existe pas dans la base de données.");
 				}
@@ -160,6 +169,7 @@ public class LectureFichier {
 
 		
 		return buteurs;
+		
 	}
 
 	public static List<Match> readMatchesFromCsv(String filePath, int limit) {
@@ -172,10 +182,24 @@ public class LectureFichier {
 
 			String[] record;
 			int count = 0;
+			
+			
 			while ((record = csvReader.readNext()) != null && count < limit) {
-				// Créer une instance de Match et configurer ses propriétés
+				
+				// Assurez-vous que la chaîne est un nombre valide avant de la convertir
+	            String dateTirStr = record[0].trim(); // Supprimez les espaces au début et à la fin
+	            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd"); // Spécifiez le format de votre date
+				java.util.Date parsedDate = null;
+				
+				try {
+					parsedDate = dateFormat.parse(dateTirStr);
+				} catch (java.text.ParseException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
 				Match match = new Match();
-				match.setDateMatch(LocalDate.parse(record[0]));
+				match.setDateMatch((parsedDate));
 				match.setCity(record[6]);
 				match.setNeutre(Boolean.parseBoolean(record[8]));
 				match.setPays(record[7]);
@@ -263,7 +287,7 @@ public class LectureFichier {
                 String dateTirStr = record[0].trim(); // Supprimez les espaces au début et à la fin
                 SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd"); // Spécifiez le format de votre date
 				java.util.Date parsedDate = null;
-				String
+				
 				try {
 					parsedDate = dateFormat.parse(dateTirStr);
 				} catch (java.text.ParseException e) {
@@ -271,26 +295,29 @@ public class LectureFichier {
 					e.printStackTrace();
 				}
 				
-				// Convertir java.util.Date en java.sql.Date
-				java.sql.Date sqlDate = new java.sql.Date(parsedDate.getTime());
 				
-				// Affecter la date à l'objet TirauBut
-				tirauBut.setDateTir(sqlDate);
 
                 // Récupérer les IDs des équipes et matchs depuis la base de données
-                String equipeNom = record[1];
-                String matchId = record[2];
+                String equipeLocalNom = record[1];
+                String equipeVisiteurNom = record[2];
+                String equipeVainqueur = record[3];
 
                 EquipeDao equipeDao = new EquipeDao();
                 MatchDao matchDao = new MatchDao();
-                Equipe vainqueur = equipeDao.findByName(equipeNom);
-                Match match = matchDao.findById(Long.parseLong(matchId));
+                Equipe vainqueur = equipeDao.findByName(equipeVainqueur);
+                List<Match> matches = matchDao.findMatchesByTeamsAndDate(equipeLocalNom, equipeVisiteurNom, dateTirStr);
 
                 // Vérifier si l'équipe et le match existent dans la base de données
-                if (vainqueur != null && match != null) {
-                    tirauBut.setVainqueur(vainqueur);
-                    tirauBut.setMatch(match);
-                    tirauButList.add(tirauBut);
+                if (vainqueur != null && !matches.isEmpty()) {
+                	
+    	            // Prendre le premier match trouvé (vous pouvez ajuster la logique en fonction de vos besoins)
+    	            Match match = matches.get(0);
+    	            tirauBut.setDateTir(parsedDate);
+    	            tirauBut.setVainqueur(vainqueur);
+    	            tirauBut.setMatch(match);  
+    	            
+    	            tirauButList.add(tirauBut);
+    	                
                 } else {
                     System.out.println("L'équipe ou le match n'existe pas dans la base de données.");
                 }
